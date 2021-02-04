@@ -1,0 +1,32 @@
+{
+    "orders": [
+        {
+            "buyer": "Buyer#1",
+            "data": "2020-12-12 21:00",
+            "item": "Pillow",
+            "price": 3000,
+            "quantity": 2
+        },
+        {
+            "buyer": "Buyer#1",
+            "data": "2020-12-12 21:00",
+            "item": "Bed",
+            "price": 12000,
+            "quantity": 1
+        },
+        {
+            "buyer": "Buyer#1",
+            "data": "2020-12-12 21:00",
+            "item": "Pillow",
+            "price": 3000,
+            "quantity": 2
+        },
+        {
+            "buyer": "Buyer#1",
+            "data": "2020-12-12 21:00",
+            "item": "Bed",
+            "price": 12000,
+            "quantity": 1
+        }
+    ]
+}
