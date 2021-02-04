@@ -21,5 +21,5 @@ with open('files_to_parse/file.yaml', 'w') as ya_file:
     yaml.dump(to_write_dict, ya_file, default_flow_style=False, allow_unicode=True)
 
 with open('files_to_parse/file.yaml', 'r') as read_ya:
-    data_from_yaml = yaml.load(read_ya)
+    data_from_yaml = yaml.load(read_ya, Loader=yaml.FullLoader)
 print(data_from_yaml)
