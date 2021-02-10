@@ -1,8 +1,0 @@
-dictionary:
-  euro: !!binary |
-    VSsyMEFD
-lst:
-- 1
-- 2
-- 3
-num: 5
