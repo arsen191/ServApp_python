@@ -1,35 +1,59 @@
 import json
 import logging
+import sys
+import threading
 import time
-
 from log_decorator import Log
 from utils import get_ip_and_port
-import log.client_log_config
 
 logger = logging.getLogger('client_log')
 
 
 @Log()
 def main():
+    port, serv_ip, sock = get_ip_and_port()
+    sock.connect((serv_ip, port))
+    person = input('Введите свое имя: ')
+    create_presence_message(person, sock)
+    if json.loads(sock.recv(4096).decode('utf-8')).get('response') == 200:
+        print('Подключение к серверу установлено!')
+
     try:
-        port, serv_ip, s = get_ip_and_port()
-        s.connect((serv_ip, port))
-        msg = create_presence_message('guest')
-        s.send(msg.encode('utf-8'))
-        data = s.recv(4096)
-        s.close()
+        sender = threading.Thread(target=write_msg, args=(sock, person, ), daemon=True)
+        receiver = threading.Thread(target=read_and_parse_msg, args=(sock, ), daemon=True)
+        sender.start()
+        receiver.start()
+    except KeyboardInterrupt:
+        sock.close()
+    else:
+        while True:
+            if sender.is_alive() and receiver.is_alive():
+                continue
+            break
+
+
+def write_msg(sock, frm):
+    while True:
+        msg = input('')
+        sock.send(handle_response(msg, frm).encode('utf-8'))
+
+
+def read_and_parse_msg(sock, presence=None):
+    while True:
         try:
-            print(handle_response(data.decode('utf-8')))
-            logger.info('Получено сообщение от сервера!')
-        except UnicodeDecodeError:
-            logger.error('Сообщение от сервера принято в другой кодировке, расшифровать не удалось')
-    except ConnectionRefusedError:
-        logger.critical('Возможно вы ошиблись адресом подключения, проверьте передаваемые параметры!')
-    except TypeError:
-        logger.critical('Проверьте правильность введенных данных!')
+            data = json.loads(sock.recv(4096).decode('utf-8'))
+            if data.get('action') == 'probe':
+                sock.send(presence)
+            elif data.get('response') == 200:
+                print('Подключение к серверу установлено!')
+            elif data.get('action') == 'msg':
+                print(f"\rResponse: {data.get('message')}")
+        except KeyboardInterrupt:
+            print('Клиентское приложение закрыто')
+            sys.exit(1)
 
 
-def create_presence_message(user):
+def create_presence_message(user, sock):
     message = {
         "action": "presence",
         "time": time.time(),
@@ -39,14 +63,17 @@ def create_presence_message(user):
             "status": "I am here!"
         }
     }
-    return json.dumps(message)
+    sock.send(json.dumps(message).encode('utf-8'))
 
 
-def handle_response(message):
-    msg = json.loads(message)
-    if msg.get("response") == 200:
-        return 200
-    return 400
+def handle_response(message, frm):
+    return json.dumps({
+            "action": "msg",
+            "time": time.time(),
+            "to": "client",
+            "from": frm,
+            "message": message
+        })
 
 
 if __name__ == '__main__':

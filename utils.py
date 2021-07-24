@@ -33,6 +33,8 @@ def get_ip_and_port(server=False):
             ip = ''
             sock.bind((ip, port))
             sock.listen(CONFIGS['MAX_CLIENTS_TO_CONNECT'])
+            sock.settimeout(0.2)
+            return sock
         return port, ip, sock
     except ValueError:
         logger_client.critical('Неверное значение порта или ip-адреса')
