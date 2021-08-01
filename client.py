@@ -21,7 +21,6 @@ class Client(metaclass=Verifier):
 
     def main(self):
         self.sock.connect((self.serv_ip, self.port))
-        # self.create_presence_message()
         self.read_and_parse_msg()
 
         sender = threading.Thread(target=self.write_msg, args=(), daemon=True)

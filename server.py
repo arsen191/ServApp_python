@@ -4,6 +4,9 @@ import time
 import logging
 from log.log_decorator import Log
 from utils import get_ip_and_port, Verifier, CONFIGS
+from conf_db import (session,
+                     Client as clients_tbl,
+                     ClientHistory as clhist_tbl)
 
 logger = logging.getLogger('server_log')
 
@@ -41,6 +44,9 @@ class Server(metaclass=Verifier):
             try:
                 client, addr = self.sock.accept()
                 print(f'Получен запрос на соединение от {addr}')
+                hist = clhist_tbl(addr[0])
+                session.add(hist)
+                session.commit()
                 client.send(json.dumps({"action": "probe", "time": time.time()}).encode('utf-8'))
                 self.clients.append(client)
             except OSError:
@@ -86,6 +92,9 @@ class Server(metaclass=Verifier):
     def handle_message(self, msg):
         message = json.loads(msg)
         if message.get('action') == 'presence' and message.get('time') and message.get('type') and message.get('user'):
+            user = clients_tbl(message.get('user').get('account_name'), message.get('user').get('status'))
+            session.add(user)
+            session.commit()
             return json.dumps({'response': 200, 'time': time.time(), 'alert': 'OK'})
         elif message.get('action') == 'msg' and message.get('time') and message.get('to') and message.get('from') \
                 and message.get('message'):
